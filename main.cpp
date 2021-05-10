@@ -40,22 +40,6 @@ int WINAPI WinMain(
 		return -1;
 	}
 
-	//四角の位置を決める
-	int X = GAME_WIDTH / 2;			//横の中心
-	int Y = GAME_HEIGHT / 2;		//縦の中心
-
-	//四角の大きさを決める
-	int width = 32;		//幅
-	int height = 32;	//高さ
-
-
-	//円の半径を決める
-	int radius = 100;
-
-	//速度
-	int speed = 10;
-	int Xspeed = speed;
-	int Yspeed = speed;
 
 	//ダブルバッファリング有効化
 	SetDrawScreen(DX_SCREEN_BACK);
@@ -63,61 +47,13 @@ int WINAPI WinMain(
 	//無限ループ
 	while (1)
 	{
-		//何かしらキーが押されたとき
-		if (CheckHitKeyAll() != 0)	//0のときに、何かキーが押された
-		{
-			break;	//無限ループを抜ける
-		}
+	
 
-		//メッセージを受け取り続ける
-		if (ProcessMessage() != 0)	//-1のとき、エラーやウィンドウが閉じられた
-		{
-			break;	//無限ループを抜ける
-		}
+		if (ProcessMessage() != 0) { break; }	//メッセージを受け取り続ける
 
-		//画面を消去する
-		if (ClearDrawScreen() != 0) { break; }
+		if (ClearDrawScreen() != 0) { break; }	//画面を消去する
 
-		//四角を描画
-		//DrawBox(
-		//	X, Y, X+ width, Y+height,
-		//	GetColor(255, 0, 0),		//色を取得
-		//	TRUE						//塗りつぶし？
-		//);
-
-		//円を描画
-		DrawCircle(X, Y, radius, GetColor(0, 255, 0), FALSE, 5);
-
-		X += Xspeed;				//四角の位置を右にずらす
-		Y += Yspeed;				//四角の位置を下にずらす
-
-		//質問①　四角を斜め右下に動かそう！
-					//heightの左にY+。Y++で下にずらす。
-
-		//質問②　四角を画面の端に来たら、移動する向きを反転させてみよう
-		if (X - radius < 0|| X + radius > GAME_WIDTH)	//横画面から出たとき
-		{
-			//移動速度の符号を反転させる
-			//+1なら、-1	-1なら+1
-			Xspeed = -Xspeed;			//移動する向きを反転
-
-			//壁に当たったら早くなる
-			if (Xspeed > 0) { Xspeed += 2; }
-			else if (Xspeed < 0) { Xspeed -= 2; }
-
-			//
-
-		}
-
-		if (Y - radius< 0 || Y + radius > GAME_HEIGHT)	//縦画面から出たとき
-		{
-			//移動速度の符号を反転させる
-			//+1なら、-1	-1なら+1
-			Yspeed = -Yspeed;			//移動する向きを反転
-
-			if (Yspeed > 0) { Yspeed += 2; }
-			else if (Yspeed < 0) { Yspeed -= 2; }
-		}
+		
 
 		ScreenFlip();					//ダブルバッファリングした画面を描画
 	}

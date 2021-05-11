@@ -20,7 +20,7 @@ struct KEYBOARD
 extern  KEYBOARD keyboard;
 
 //プロトタイプ宣言
-extern VOID AllKeyState(VOID);				//すべてのキーの状態を取得する
+extern VOID AllKeyUpdate(VOID);				//すべてのキーの状態を取得する
 extern BOOL KeyDown(int KEY_INPUT_);		//特定のキーを押し続けているか？
 extern BOOL KeyUp(int KEY_INPUT_);			//特定のキーをあげているか？
 extern BOOL KeyClick(int KEY_INPUT_);		//特定のキーをクリックしたか？

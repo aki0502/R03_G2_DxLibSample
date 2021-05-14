@@ -4,7 +4,7 @@
 #include "keyboard.h"
 
 //グローバル変数
-KEYBOARD Keyboard;
+KEYBOARD keyboard;
 
 //関数
 
@@ -16,7 +16,7 @@ VOID AllKeyUpdate(VOID)
 	//直前のキー入力を取っておく
 	for (int i = 0; i < KEY_KIND_MAX; i++)
 	{
-		Keyboard.oldAllKeyState[i] = keyboard.AllKeyState[i];
+		keyboard.oldAllKeyState[i] = keyboard.AllKeyState[i];
 	}
 
 	//すべてのキー入力状態を得る
@@ -26,13 +26,13 @@ VOID AllKeyUpdate(VOID)
 	for (int i = 0; i < KEY_KIND_MAX; i++)
 	{
 		//キーボードを押しているとき
-		if (Keyboard.TempKeyState[i] != 0)
+		if (keyboard.TempKeyState[i] != 0)
 		{
-			Keyboard.AllKeyState[i]++;			//押してる時間を加算
+			keyboard.AllKeyState[i]++;			//押してる時間を加算
 		}
 		else
 		{
-			Keyboard.AllKeyState[i] != 0;		//押してる時間を0にもどす
+			keyboard.AllKeyState[i] != 0;		//押してる時間を0にもどす
 		}
 	}
 	return;
@@ -45,7 +45,7 @@ VOID AllKeyUpdate(VOID)
 /// <returns>//押していたらTRUE</returns>
 BOOL KeyDown(int KEY_INPUT_)
 {
-	if (Keyboard.AllKeyState[KEY_INPUT_] != 0)
+	if (keyboard.AllKeyState[KEY_INPUT_] != 0)
 	{
 		return TRUE;
 	}
@@ -63,8 +63,28 @@ BOOL KeyDown(int KEY_INPUT_)
 BOOL KeyUp(int KEY_INPUT_)
 {
 	if (
-		Keyboard.oldAllKeyState[KEY_INPUT_] != 0		//以前は押していた
-		&&Keyboard.AllKeyState[KEY_INPUT_] == 0		//現在押していない
+		keyboard.oldAllKeyState[KEY_INPUT_] != 0		//以前は押していた
+		&&keyboard.AllKeyState[KEY_INPUT_] == 0		//現在押していない
+		)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+/// <summary>
+///  キーをあげているか、キーコードで判断する
+/// </summary>
+/// <param name="KEY_INPUT_">//キーコード</param>
+/// <returns>//あげてたらTRUE</returns>
+BOOL KeyClick(int KEY_INPUT_)
+{
+	if (
+		keyboard.oldAllKeyState[KEY_INPUT_] != 0		//以前は押していた
+		&& keyboard.AllKeyState[KEY_INPUT_] == 0		//現在押していない
 		)
 	{
 		return TRUE;
@@ -90,7 +110,7 @@ BOOL KeyDownKeep(int KEY_INPUT_, int MilliTime)
 	//例)　1500ミリ秒押す/1000ミリ・→・1,5秒×60FPS・=・90
 	int UpdateTime = (MilliTime / MilliSec) * 60;
 
-	if (Keyboard.AllKeyState[KEY_INPUT_] > UpdateTime)
+	if (keyboard.AllKeyState[KEY_INPUT_] > UpdateTime)
 	{
 		return TRUE;		//押し続けている
 	}

@@ -32,7 +32,7 @@ VOID AllKeyUpdate(VOID)
 		}
 		else
 		{
-			keyboard.AllKeyState[i] != 0;		//‰Ÿ‚µ‚Ä‚éŽžŠÔ‚ð0‚É‚à‚Ç‚·
+			keyboard.AllKeyState[i] = 0;		//‰Ÿ‚µ‚Ä‚éŽžŠÔ‚ð0‚É‚à‚Ç‚·
 		}
 	}
 	return;

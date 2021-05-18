@@ -180,7 +180,7 @@ int WINAPI WinMain(
 		
 
 
-		DrawCircle(X, Y, radius, GetColor(255, 255, 0), TRUE);
+		DrawCircle(X, Y, radius, GetColor(150, 250, 255), TRUE);
 		ScreenFlip();					//ダブルバッファリングした画面を描画
 	}
 
@@ -242,7 +242,7 @@ VOID TitleProc(VOID)
 /// <param name=""></param>
 VOID TitleDraw(VOID)
 {
-	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
+	DrawString(0, 0, "フリーボールマン", GetColor(0, 0, 0));
 	return;
 }
 
@@ -425,6 +425,6 @@ VOID ChangeDraw(VOID)
 
 	//半透明終了
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-	DrawString(0, 0, "切り替え画面", GetColor(0, 0, 0));
+	DrawString(0, 0, " ", GetColor(0, 0, 0));
 	return;
 }

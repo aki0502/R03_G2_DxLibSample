@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="敵.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="game.ico" />

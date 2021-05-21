@@ -1,7 +1,8 @@
 //ヘッダーファイルの読み込み
 #include "DxLib.h"	//DxLibを使うときは必要
-
 #include "keyboard.h"	//キーボードの処理
+#include "FPS.h"
+
 
 //マクロ定義
 #define GAME_TITLE	"ゲームタイトル"	//ゲームタイトル
@@ -84,7 +85,7 @@ int WINAPI WinMain(
 	SetWindowSize(GAME_WIDTH, GAME_HEIGHT);				//ウィンドウの大きさを設定
 	SetBackgroundColor(255, 255, 255);					//デフォルトの背景の色
 	SetWindowIconID(GAME_ICON_ID);						//アイコンファイルを読込
-	SetWaitVSyncFlag(TRUE);								//ディスプレイの垂直同期を有効にする
+	SetWaitVSyncFlag(TRUE);								//ディスプレイの垂直同期を有効にする	//ディスプレイの描画速度をTRUEで待つ、FALSEで本来の速度になる。
 	SetAlwaysRunFlag(TRUE);								//ウィンドウをずっとアクティブにする
 
 
@@ -119,6 +120,9 @@ int WINAPI WinMain(
 
 		//キーボード入力の更新
 		AllKeyUpdate();
+
+		//FPS値の更新
+		FPSUpdate();
 
 		//ESCキーで強制終了
 		if (KeyClick(KEY_INPUT_ESCAPE) == TRUE) { break; }
@@ -181,6 +185,13 @@ int WINAPI WinMain(
 
 
 		DrawCircle(X, Y, radius, GetColor(150, 250, 255), TRUE);
+
+		//FPS値を描画
+		FPSDraw();
+
+		//FPS値を待つ
+		FPSWait();
+
 		ScreenFlip();					//ダブルバッファリングした画面を描画
 	}
 

@@ -6,7 +6,7 @@
 //構造体の定義
 
 //キャラクタの構造体
-struct CHARCTOR
+struct CHARACTOR
 {
 	int handle = -1;		//画像のハンドル（管理番号）
 	char path[255];			//画像の場所（パス）
@@ -16,17 +16,22 @@ struct CHARCTOR
 	int height;				//高さ
 	int speed = 1;			//移動速度
 
-	RECT coll;				//当たり判定の領域(四角)
+	RECT Coll;				//当たり判定の領域(四角)
 	BOOL IsDraw;			//画像が描画できる？
 };
 
+//グローバル変数
 //シーンを管理する変数
 GAME_SCENE GameScene;		//現在のゲームシーン
 GAME_SCENE OldGameScene;	//過去のゲームシーン
 GAME_SCENE NextGameScene;	//次のゲームシーン
 
 //プレイヤー
-CHARCTOR player;
+CHARACTOR player;
+
+//ゴール
+ CHARACTOR Goal;
+
 
 //画面の切り替え
 BOOL IsFadeOut = FALSE;	//フェードアウト
@@ -65,7 +70,9 @@ VOID ChangeDraw(VOID);	//切り替え画面（描画）
 
 VOID ChangeScene(GAME_SCENE scene);		//シーン切り替え
 
-
+VOID CollUpdatePlayer(CHARACTOR* chara);		//当たり判定の領域
+VOID CollUpdate(CHARACTOR* chara);				//当たり判定
+BOOL Oncollision(RECT coll1, RECT coll2);		//矩形と矩形の当たり判定
 
 
 
@@ -100,11 +107,7 @@ int WINAPI WinMain(
 	//画像の幅と高さを取得
 	GetGraphSize(player.handle, &player.width, &player.height);
 
-	//プレイヤーを初期化
-	player.x = GAME_WIDTH / 2 - player.width / 2;		//中央寄せ
-	player.y = GAME_HEIGHT / 2 - player.width / 2;		//中央寄せ
-	player.speed = 5;
-	player.IsDraw = TRUE;	//描画できる！
+	
 
 	//ダブルバッファリング有効化
 	SetDrawScreen(DX_SCREEN_BACK);
@@ -116,8 +119,9 @@ int WINAPI WinMain(
 
 	//ゲーム全体の初期化
 
+
 	//プレイヤーの画像を読み込み
-	strcpyDx(player.path, "..\\image\\player.jpg");
+	strcpyDx(player.path, ".\\image\\Player.jpg");
 	player.handle = LoadGraph(player.path);		//画像の読み込み
 
 	//画像が読み込めなあった時は、エラー(-1)が入る
@@ -133,8 +137,66 @@ int WINAPI WinMain(
 		return -1;							//エラー終了
 	}
 
+	//画像の幅と高さを取得
+	GetGraphSize(player.handle, &player.width, &player.height);
+
+	//プレイヤーの操作
+	if (KeyDown(KEY_INPUT_UP) == TRUE)
+	{
+		player.y -= player.speed * fps.DeltaTime;
+	}
+	if (KeyDown(KEY_INPUT_DOWN) == TRUE)
+	{
+		player.y += player.speed * fps.DeltaTime;
+	}
+	if (KeyDown(KEY_INPUT_LEFT) == TRUE)
+	{
+		player.x -= player.speed * fps.DeltaTime;
+	}
+	if (KeyDown(KEY_INPUT_RIGHT) == TRUE)
+	{
+		player.x += player.speed * fps.DeltaTime;
+	}
+	/*
+	//当たり判定を更新する
+	CollUpdatePlayer(&player);		//プレイヤーの当たり判定の更新
+	*/
+
+	//ゴールの当たり判定を更新する
+	CollUpdate(&Goal);
+
 	//プレイヤーを初期化
-		player.x
+	player.x = GAME_WIDTH / 2 - player.width / 2;		//中央寄せ
+	player.y = GAME_HEIGHT / 2 - player.width / 2;		//中央寄せ
+	player.speed = 500;
+	player.IsDraw = TRUE;	//描画できる！
+
+
+	//ゴール画像を読み込み
+	strcpyDx(Goal.path, ".\\image\\blueハムハムゴール.jpg");
+	Goal.handle = LoadGraph(Goal.path);		//画像の読み込み
+
+	//画像が読み込めなあった時は、エラー(-1)が入る
+	if (Goal.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),			//メインのウィンドウハンドル
+			Goal.path,					//メッセージ本文
+			"画像読み込みエラー！",			//メッセージタイトル
+			MB_OK							//ボタン
+		);
+		DxLib_End();					//強制終了
+		return -1;							//エラー終了
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
+
+	//ゴールを初期化
+	Goal.x = GAME_WIDTH - Goal.width;
+	Goal.y = 0;
+	Goal.speed = 500;		//スピード
+	Goal.IsDraw = TRUE;		//描画できる！
 
 	//無限ループ
 	while (1)
@@ -203,7 +265,7 @@ int WINAPI WinMain(
 
 	//終わった時の処理
 	DeleteGraph(player.handle);			//画像をメモリ上から削除
-
+	DeleteGraph(Goal.handle);			//画像をメモリ上から削除
 
 
 
@@ -258,16 +320,11 @@ VOID TitleProc(VOID)
 /// タイトル画面の描画
 /// </summary>
 /// <param name=""></param>
-VOID PlayDraw(VOID)
+VOID TitleDraw(VOID)
 {
-	//プレイヤーを描画
-	if (player.IsDraw == TRUE)
-	{
-		//画像を描画
-		DrawGraph(player.x, player.y, player.handle, TRUE);
-	}
+	
 
-	DrawString(0, 0, "プレイ画面", GrtColor(0, 0, 0));
+	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
 }
 
@@ -284,25 +341,54 @@ VOID Play(VOID)
 }
 
 /// <summary>
+/// ゴールの描画
+/// </summary>
+/// <param name=""></param>
+VOID GoalProc(VOID)
+{
+	
+
+	//ゴールを描画
+	if (Goal.IsDraw == TRUE)
+	{
+		//画像を描画
+		DrawGraph(Goal.x, Goal.y, Goal.handle, TRUE);
+
+			//デバックのときは、当たり判定の領域を描画
+		if (GAME_DEBUG == TRUE)
+		{
+			//四角形を描画
+			DrawBox(Goal.Coll.left, Goal.Coll.top, Goal.Coll.right, Goal.Coll.bottom,
+				GetColor(255, 0, 0), FALSE);
+		}
+	}
+}
+
+/// <summary>
 /// プレイ画面の処理
 /// </summary>
 /// <param name=""></param>
 VOID PlayProc(VOID)
 {
-	//プレイヤーを描画
-	if (player.IsDraw == TRUE)
-	{
-		//画像を描画
-		DrawGraph
-	}
-	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	
+	/*if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
 		//シーン切り替え
 		//次のシーンの初期化を行う
 
 		//エンド画面に切り替え
 		ChangeScene(GAME_SCENE_END);
+	}*/
+
+	//プレイヤーがゴールに当たった時は
+	if (Oncollision(player.Coll, Goal.Coll) == TRUE)
+	{
+		//エンド画面に切り替え
+		ChangeScene(GAME_SCENE_END);
 	}
+
+	//当たり判定を更新する
+	CollUpdatePlayer(&player);
 	return;
 }
 
@@ -312,8 +398,23 @@ VOID PlayProc(VOID)
 /// <param name=""></param>
 VOID PlayDraw(VOID)
 {
-	DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
-	return;
+	//プレイヤーを描画
+	if (player.IsDraw == TRUE)
+	{
+
+		//画像を描画
+		DrawGraph(player.x, player.y, player.handle, TRUE);
+
+		//デバックのときは、当たり判定の領域を描画
+		if (GAME_DEBUG == TRUE)
+		{
+			//四角形を描画
+			DrawBox(player.Coll.left, player.Coll.top, player.Coll.right, player.Coll.bottom,
+				GetColor(255, 0, 0), FALSE);
+		}
+		DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
+		return;
+	}
 }
 
 /// <summary>
@@ -418,6 +519,19 @@ VOID ChangeProc(VOID)
 }
 
 /// <summary>
+/// 当たり判定の領域更新
+/// </summary>
+/// <param name="coll">当たり判定の領域</param>
+VOID CollUpdate(CHARACTOR* chara)
+{
+	chara->Coll.left = chara->x;					//当たり判定の調節
+	chara->Coll.top = chara->y;						//当たり判定の調節
+	chara->Coll.right = chara->x + chara->width;	//当たり判定の調節
+	chara->Coll.bottom = chara->y + chara->height;	//当たり判定の調節
+	return;
+}
+
+/// <summary>
 /// 切り替え画面の描画
 /// </summary>
 /// <param name=""></param>
@@ -458,4 +572,61 @@ VOID ChangeDraw(VOID)
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 	DrawString(0, 0, " ", GetColor(0, 0, 0));
 	return;
+}
+/// <summary>
+/// 当たり判定の領域更新(プレイヤー)
+/// </summary>
+/// <param name="coll">当たり判定の領域</param>
+VOID CollUpdatePlayer(CHARACTOR* chara)
+{
+	chara->Coll.left = chara->x;					//当たり判定の調節
+	chara->Coll.top = chara->y;						//当たり判定の調節
+	chara->Coll.right = chara->x + chara->width;	//当たり判定の調節
+	chara->Coll.bottom = chara->y + chara->height;	//当たり判定の調節
+	return;
+}
+
+//自分で考えてる
+
+//RECT coll1
+typedef struct tagRECT {
+	LONG left=100;		//左上端のｘ座標
+	LONG top=30;		//左下端のy座標
+	LONG right=350;		//右上端のｘ座標
+	LONG bottom=130;	//右下端のy座標
+
+}RECT, * PRECT;
+
+//RECT coll2
+typedef struct tagRECT {
+	LONG left = 290;		//左上端のｘ座標
+	LONG top = 105;			//左上端のy座標
+	LONG right = 440;		//右下端のｘ座標
+	LONG bottom = 290;		//右下端のy座標
+
+}RECT, * PRECT;
+
+/// <summary>
+/// 矩形と矩形の当たり判定
+/// </summary>
+/// <param name="coll1">矩形1</param>
+/// <param name="coll2">矩形2</param>
+/// <returns></returns>
+BOOL Oncollision(RECT coll1, RECT coll2)
+{
+	if (
+		coll1.left < coll2.right &&		//左辺のX座標　＜　右辺のＸ座標かつ
+		coll1.right > coll2.left &&		//右辺のＸ座標＞　左辺のＸ座標かつ
+		coll1.top < coll2.bottom &&		//上辺のＹ座標＜下辺のＹ座標かつ
+		coll1.bottom > coll2.top		//下辺のＹ座標＞上辺のＹ座標
+		)
+	{
+		//あってるとき
+		return TRUE;
+	}
+	else
+	{
+		//あってないとき
+		return FALSE;
+	}
 }

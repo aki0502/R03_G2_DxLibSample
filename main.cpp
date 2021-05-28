@@ -20,11 +20,28 @@ struct CHARACTOR
 	BOOL IsDraw;			//画像が描画できる？
 };
 
+//動画の構造体
+struct MOVIE
+{
+	int handle = -1;		//動画のハンドル
+	char path[255];			//動画のパス
+
+	int x;			//x位置
+	int y;			//y位置
+	int width;		//幅
+	int height;		//横
+
+	int Volume = 255;	//ボリューム（最小）０～２５５（最大）
+};
+
 //グローバル変数
 //シーンを管理する変数
 GAME_SCENE GameScene;		//現在のゲームシーン
 GAME_SCENE OldGameScene;	//過去のゲームシーン
 GAME_SCENE NextGameScene;	//次のゲームシーン
+
+//プレイ背景の動画
+MOVIE playMovie;
 
 //プレイヤー
 CHARACTOR player;
@@ -119,9 +136,29 @@ int WINAPI WinMain(
 
 	//ゲーム全体の初期化
 
+	//プレイ背景を読み込み
+	strcpyDx(playMovie.path, ".\\movie\\Knight - 33990.mp4");
+	playMovie.handle = LoadGraph(playMovie.path);		//画像の読み込み
+
+	//画像が読み込めなあった時は、エラー(-1)が入る
+	if (playMovie.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),			//メインのウィンドウハンドル
+			playMovie.path,					//メッセージ本文
+			"画像読み込みエラー！",			//メッセージタイトル
+			MB_OK							//ボタン
+		);
+		DxLib_End();					//強制終了
+		return -1;							//エラー終了
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(playMovie.handle, &playMovie.width, &playMovie.height);
+
 
 	//プレイヤーの画像を読み込み
-	strcpyDx(player.path, ".\\image\\Player.jpg");
+	strcpyDx(player.path, ".\\image\\player.png");
 	player.handle = LoadGraph(player.path);		//画像の読み込み
 
 	//画像が読み込めなあった時は、エラー(-1)が入る
@@ -173,7 +210,7 @@ int WINAPI WinMain(
 
 
 	//ゴール画像を読み込み
-	strcpyDx(Goal.path, ".\\image\\blueハムハムゴール.jpg");
+	strcpyDx(Goal.path, ".\\image\\ハムハムゴール.png");
 	Goal.handle = LoadGraph(Goal.path);		//画像の読み込み
 
 	//画像が読み込めなあった時は、エラー(-1)が入る
@@ -264,6 +301,7 @@ int WINAPI WinMain(
 	}
 
 	//終わった時の処理
+	DeleteGraph(playMovie.handle);			//動画をメモリ上から削除
 	DeleteGraph(player.handle);			//画像をメモリ上から削除
 	DeleteGraph(Goal.handle);			//画像をメモリ上から削除
 
@@ -340,29 +378,7 @@ VOID Play(VOID)
 	return;
 }
 
-/// <summary>
-/// ゴールの描画
-/// </summary>
-/// <param name=""></param>
-VOID GoalProc(VOID)
-{
-	
 
-	//ゴールを描画
-	if (Goal.IsDraw == TRUE)
-	{
-		//画像を描画
-		DrawGraph(Goal.x, Goal.y, Goal.handle, TRUE);
-
-			//デバックのときは、当たり判定の領域を描画
-		if (GAME_DEBUG == TRUE)
-		{
-			//四角形を描画
-			DrawBox(Goal.Coll.left, Goal.Coll.top, Goal.Coll.right, Goal.Coll.bottom,
-				GetColor(255, 0, 0), FALSE);
-		}
-	}
-}
 
 /// <summary>
 /// プレイ画面の処理
@@ -398,9 +414,36 @@ VOID PlayProc(VOID)
 /// <param name=""></param>
 VOID PlayDraw(VOID)
 {
+	//背景動画を描画
+	if (GetMovieStateToGraph(playMovie.handle) == 0)
+	{
+		//再生する
+		SeekMovieToGraph(playMovie.handle, 0);		//シークバーを最初に戻す
+		PlayMovieToGraph(playMovie.handle);			//動画を再生
+	}
+
+	//動画を描画（画像を引き延ばす）
+	DrawExtendGraph(0, 0, GAME_WIDTH, GAME_HEIGHT, playMovie.handle, TRUE);
+
+	//ゴールを描画
+	if (Goal.IsDraw == TRUE)
+	{
+		//画像を描画
+		DrawGraph(Goal.x, Goal.y, Goal.handle, TRUE);
+
+		//デバックのときは、当たり判定の領域を描画
+		if (GAME_DEBUG == TRUE)
+		{
+			//四角形を描画
+			DrawBox(Goal.Coll.left, Goal.Coll.top, Goal.Coll.right, Goal.Coll.bottom,
+				GetColor(255, 0, 0), FALSE);
+		}
+	}
+	
 	//プレイヤーを描画
 	if (player.IsDraw == TRUE)
 	{
+		
 
 		//画像を描画
 		DrawGraph(player.x, player.y, player.handle, TRUE);
@@ -588,23 +631,6 @@ VOID CollUpdatePlayer(CHARACTOR* chara)
 
 //自分で考えてる
 
-//RECT coll1
-typedef struct tagRECT {
-	LONG left=100;		//左上端のｘ座標
-	LONG top=30;		//左下端のy座標
-	LONG right=350;		//右上端のｘ座標
-	LONG bottom=130;	//右下端のy座標
-
-}RECT, * PRECT;
-
-//RECT coll2
-typedef struct tagRECT {
-	LONG left = 290;		//左上端のｘ座標
-	LONG top = 105;			//左上端のy座標
-	LONG right = 440;		//右下端のｘ座標
-	LONG bottom = 290;		//右下端のy座標
-
-}RECT, * PRECT;
 
 /// <summary>
 /// 矩形と矩形の当たり判定

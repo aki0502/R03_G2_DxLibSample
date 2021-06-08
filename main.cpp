@@ -67,6 +67,9 @@ AUDIO TitleBGM;
 AUDIO PlayBGM;
 AUDIO EndBGM;
 
+//効果音
+AUDIO PlayerSE;
+
 //画面の切り替え
 BOOL IsFadeOut = FALSE;		//フェードアウト
 BOOL IsFadeIn = FALSE;		//フェードイン
@@ -109,6 +112,9 @@ VOID CollUpdate(CHARACTOR* chara);			//当たり判定
 BOOL OnCollRect(RECT a, RECT b);			//矩形と矩形の当たり判定
 
 BOOL GameLoad(VOID);	//ゲームのデータを読み込み
+
+BOOL LoadAudio(AUDIO* audio, const char* path, int volume, int playType);	//ゲームの音楽を読み込み
+
 VOID GameInit(VOID);	//ゲームのデータの初期化
 
 // プログラムは WinMain から始まります
@@ -226,6 +232,9 @@ int WINAPI WinMain(
 	DeleteSoundMem(PlayBGM.handle);		//画像をメモリ上から削除
 	DeleteSoundMem(EndBGM.handle);		//画像をメモリ上から削除
 
+	DeleteSoundMem(PlayerSE.handle);		//画像をメモリ上から削除
+
+
 	//ＤＸライブラリ使用の終了処理
 	DxLib_End();
 
@@ -308,73 +317,62 @@ BOOL GameLoad(VOID)
 	//画像の幅と高さを取得
 	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
 
-	//音楽読み込み
-	strcpyDx(TitleBGM.path, ".\\audio\\titleBGM.mp3");	//タイトルBGM
-	TitleBGM.handle = LoadSoundMem(TitleBGM.path);	//画像の読み込み
 
-	//画像が読み込めなかったときは、エラー(-1)が入る
-	if (TitleBGM.handle == -1)
-	{
-		MessageBox(
-			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			TitleBGM.path,				//メッセージ本文
-			"音楽読み込みエラー！",		//メッセージタイトル
-			MB_OK					//ボタン
-		);
+	//音楽を読み込む
+	if (!LoadAudio(&TitleBGM, ".\\titleBGM.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
+	if (!LoadAudio(&PlayBGM, ".\\playBGM.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
+	if (!LoadAudio(&EndBGM, ".\\endBGM.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
 
-		return FALSE;	//読み込み失敗
-	}
+	if (!LoadAudio(&PlayerSE, ".\\playerSE.mp3", 255, DX_PLAYTYPE_BACK)) { return FALSE; }
 
-	TitleBGM.playType = DX_PLAYTYPE_LOOP;
-	TitleBGM.Volume = 255;
 
 	
-
-	//プレイ音楽
-	strcpyDx(PlayBGM.path, ".\\audio\\playBGM.mp3");	//タイトルBGM
-	PlayBGM.handle = LoadSoundMem(PlayBGM.path);	//画像の読み込み
-
-	//画像が読み込めなかったときは、エラー(-1)が入る
-	if (PlayBGM.handle == -1)
-	{
-		MessageBox(
-			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			PlayBGM.path,				//メッセージ本文
-			"音楽読み込みエラー！",		//メッセージタイトル
-			MB_OK					//ボタン
-		);
-
-		return FALSE;	//読み込み失敗
-	}
-
-	PlayBGM.playType = DX_PLAYTYPE_LOOP;
-	PlayBGM.Volume = 255;
-
-	//エンド音楽
-	strcpyDx(EndBGM.path, ".\\audio\\endBGM.mp3");	//タイトルBGM
-	EndBGM.handle = LoadSoundMem(EndBGM.path);	//画像の読み込み
-
-	//画像が読み込めなかったときは、エラー(-1)が入る
-	if (EndBGM.handle == -1)
-	{
-		MessageBox(
-			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			EndBGM.path,				//メッセージ本文
-			"音楽読み込みエラー！",		//メッセージタイトル
-			MB_OK					//ボタン
-		);
-
-		return FALSE;	//読み込み失敗
-	}
-
-	EndBGM.playType = DX_PLAYTYPE_LOOP;
-	EndBGM.Volume = 255;
 	return TRUE;	//全て読み込みた！
 };
 
 
+/// <summary>
+/// 音楽をメモリに読み込み
+/// </summary>
+/// <param name="audio">Audio構造体変数のアドレス</param>
+/// <param name="path">Audioの音楽パス</param>
+/// <param name="volume">ボリューム</param>
+/// <param name="playType">DX_PLAYTYPE_LOOP or DX_PLAYTYPE_BACK</param>
+/// <returns></returns>
+/// <summary>
+/// 音楽をメモリに読み込み
+/// </summary>
+/// <param name="audio">Audio構造体変数のアドレス</param>
+/// <param name="path">Audioの音楽パス</param>
+/// <param name="volume">ボリューム</param>
+/// <param name="playType">DX_PLAYTYPE_LOOP or DX_PLAYTYPE_BACK</param>
+/// <returns></returns>
+BOOL LoadAudio(AUDIO* audio, const char* path, int volume, int playType)
+{
+	//音楽の読み込み
+	strcpyDx(audio->path, path); //パスのコピー
+	audio->handle = LoadSoundMem(audio->path); //音楽の読み込み
 
-//音楽読み込み
+	 //音楽が読み込めなかったときは、エラー(-1)が入る
+	if (audio->handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(), //メインのウィンドウハンドル
+			audio->path, //メッセージ本文
+			"音楽読み込みエラー！", //メッセージタイトル
+			MB_OK //ボタン
+		);
+
+		return FALSE; //読み込み失敗
+	}
+
+	//その他の設定
+	audio->Volume = volume;
+	audio->playType = playType;
+
+	return TRUE;
+}
+
 
 
 
@@ -455,7 +453,7 @@ VOID TitleProc(VOID)
 	{
 			//BGMを流す
 			PlaySoundMem(TitleBGM.handle, TitleBGM.playType);
-}
+	}
 	return;
 }
 
@@ -507,19 +505,31 @@ VOID PlayProc(VOID)
 	if (KeyDown(KEY_INPUT_UP) == TRUE)
 	{
 		player.y -= player.speed * fps.DeltaTime;
+
+		//動く時の効果音を追加
+		PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
 	}
 	if (KeyDown(KEY_INPUT_DOWN) == TRUE)
 	{
 		player.y += player.speed * fps.DeltaTime;
+
+		//動く時の効果音を追加
+		PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
 	}
 
 	if (KeyDown(KEY_INPUT_LEFT) == TRUE)
 	{
 		player.x -= player.speed * fps.DeltaTime;
+
+		//動く時の効果音を追加
+		PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
 	}
 	if (KeyDown(KEY_INPUT_RIGHT) == TRUE)
 	{
 		player.x += player.speed * fps.DeltaTime;
+
+		//動く時の効果音を追加
+		PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
 	}
 
 	//当たり判定を更新する
@@ -628,6 +638,10 @@ VOID EndProc(VOID)
 
 	//BGMが流れていないとき
 	if(CheckSoundMem(EndBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(EndBGM.handle, EndBGM.playType);
+	}
 
 	return;
 }

@@ -71,6 +71,8 @@ CHARACTOR Goal;
 IMAGE TitleLogo;	//タイトルロゴ
 IMAGE TitleEnter;	//エンターキーを押してね
 IMAGE EndClear;		//クリアロゴ
+IMAGE meilo;		//迷路
+
 
 //音楽
 AUDIO TitleBGM;
@@ -114,6 +116,11 @@ VOID PlayDraw(VOID);	//プレイ画面(描画)
 VOID End(VOID);			//エンド画面
 VOID EndProc(VOID);		//エンド画面(処理)
 VOID EndDraw(VOID);		//エンド画面(描画)
+
+VOID kill(VOID);			//エンド画面
+VOID killProc(VOID);		//エンド画面(処理)
+VOID killDraw(VOID);		//エンド画面(描画)
+
 
 VOID Change(VOID);		//切り替え画面
 VOID ChangeProc(VOID);	//切り替え画面(処理)
@@ -295,8 +302,8 @@ BOOL GameLoad(VOID)
 	if (!LoadImageMem(&Goal.img, ".\\Image\\goal.png")) { return FALSE; }
 
 	//ロゴを読み込む
-	if (!LoadImageMem(&TitleLogo, ".\\Image\\title_背景.jpg")) { return FALSE; }
-	if (!LoadImageMem(&TitleEnter, ".\\Image\\TitleEnter.jpg")) { return FALSE; }
+	if (!LoadImageMem(&TitleLogo, ".\\Image\\TitleLogo.png")) { return FALSE; }
+	if (!LoadImageMem(&TitleEnter, ".\\Image\\TitleEnter.png")) { return FALSE; }
 	if (!LoadImageMem(&EndClear, ".\\Image\\endClear.jpg")) { return FALSE; }
 
 	//音楽を読み込む
@@ -402,7 +409,7 @@ VOID GameInit(VOID)
 
 	//タイトルロゴの位置を決める
 	TitleLogo.x = GAME_WIDTH / 2 - TitleLogo.width / 2;	//中央揃え
-	TitleLogo.y = 100;
+	TitleLogo.y = 0;
 
 	//PushEnterの位置を決める
 	TitleEnter.x = GAME_WIDTH / 2 - TitleEnter.width / 2;	//中央揃え
@@ -483,7 +490,7 @@ VOID TitleDraw(VOID)
 {
 
 	//タイトルロゴの描画
-	DrawGraph(TitleLogo.x, TitleLogo.y, TitleLogo.handle, TRUE);
+	DrawGraph(TitleLogo.x, TitleLogo.y, TitleLogo.handle, TRUE); 
 
 	//MAX値まで待つ
 	if (PushEnterCnt < PushEnterCntMAX) { PushEnterCnt++; }
